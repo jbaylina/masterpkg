@@ -152,7 +152,7 @@ gulp.task('watch', function() {
 	gulp.watch(config.srcSass, ['sass']);
 });
 
-gulp.task('client', function () {
+gulp.task('client', ['build'], function () {
   connect.server({
     root: './dist',
     port: 3001,
@@ -174,7 +174,7 @@ gulp.task('app', function() {
         .pipe(gulp.dest("./"));
 });
 
-gulp.task('server', ['app', 'npm'], shell.task(["node app.js"]));
+gulp.task('server', ['app', 'npm', 'build'], shell.task(["node app.js"]));
 
 gulp.task('default', ['build'], function (cb) {
 	runSequence('client', 'watch', cb);

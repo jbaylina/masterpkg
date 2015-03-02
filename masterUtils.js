@@ -58,7 +58,7 @@ module.exports.generateBowers = function(cb) {
 	});
 };
 
-module.exports.generateNpmPackages = function(cb) {
+module.exports.generateNpmPackagesOld = function(cb) {
 	var modulesPath = path.join(__top, 'master_modules');
 
 	fs.readdir(modulesPath, function(err, modules) {
@@ -90,6 +90,66 @@ module.exports.generateNpmPackages = function(cb) {
 							if (err) return cb2(err);
 							fs.writeFile(path.join(modulesPath, module, ".npmignore"), "*\n!package.json\n", cb2);
 						});
+					});
+				} else {
+					cb2();
+				}
+			});
+
+		}, function(err) {
+			if (err) return (err);
+			fs.readFile(path.join(__top, "master.json"), function(err, contents) {
+				if (!err) {
+						var mainConfig;
+						try {
+							mainConfig = JSON.parse(contents);
+						} catch (err2) {
+						}
+						for (var d in mainConfig.npmDependencies) {
+							mainNpm.dependencies[d] = mainConfig.npmDependencies[d];
+						}
+						mainNpm . version = mainConfig.version || "0.0.1";
+				}
+				fs.writeFile(path.join(__top, "package.json"), JSON.stringify(mainNpm, null, 1), function(err) {
+					if (err) return err;
+					npm.load({}, function (err, npm) {
+					  // use the npm object, now that it's loaded.
+					  //
+					  if (err) return cb(err);
+
+					  npm.commands.install([], cb);
+					});
+				});
+			});
+		});
+	});
+};
+
+module.exports.generateNpmPackages = function(cb) {
+	var modulesPath = path.join(__top, 'master_modules');
+
+	fs.readdir(modulesPath, function(err, modules) {
+		if (err) return cb(err);
+		var mainNpm = {
+			name: "master",
+			dependencies: {}
+		};
+		async.each(modules, function(module, cb2) {
+			var jsonFile = path.join(modulesPath, module, 'master.json');
+			fs.exists(jsonFile, function(exists) {
+				if (exists) {
+					fs.readFile(jsonFile, function(err, contents) {
+						if (err) return cb2(err);
+						var mMasterConfig;
+						try {
+							mMasterConfig = JSON.parse(contents);
+						} catch (err2) {
+							return cb2(err2);
+						}
+						for (var d in mMasterConfig.npmDependencies) {
+							mainNpm.dependencies[d] = mMasterConfig.npmDependencies[d];
+						}
+						cb2();
 					});
 				} else {
 					cb2();
