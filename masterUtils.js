@@ -287,6 +287,10 @@ module.exports.generateIndexJade = function(cb) {
 	});
 };
 
+function quoteString (S) {
+    return '\'' + S.replace(/\'/g, "'\\''") + '\'';
+}
+
 module.exports.generateRequiresModule = function(cb) {
 	var modulesPath = path.join(__top, 'master_modules');
 	var output = "";
@@ -296,7 +300,7 @@ module.exports.generateRequiresModule = function(cb) {
 			var indexName = path.join(__top, 'master_modules', module, 'client', 'index.js');
 			fs.exists(indexName, function(exists) {
 				if (exists) {
-					output += "module.exports." + module + "= require('" + indexName +"');\n";
+					output += "module.exports." + module + "= require(" + quoteString(indexName) +");\n";
 				}
 				cb2();
 			});
