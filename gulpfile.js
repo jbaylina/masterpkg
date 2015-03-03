@@ -4,7 +4,6 @@
 var gulp = require('gulp');
 var jade = require('gulp-jade');
 var rename = require("gulp-rename");
-var clean = require('gulp-clean');
 var runSequence = require('gulp-run-sequence');
 var browserify = require('gulp-browserify');
 var connect = require('gulp-connect');
@@ -16,6 +15,7 @@ var historyApiFallback = require('connect-history-api-fallback');
 var async = require('async');
 var path = require('path');
 var U = require('underscore');
+var rimraf = require('rimraf');
 
 var masterUtils = require('./masterUtils.js');
 
@@ -134,9 +134,10 @@ gulp.task('bower_components', ['bower'], function() {
 });
 
 
-gulp.task('clean', function () {
-  return gulp.src(["./dist", "./tmp"], {read: false})
-      .pipe(clean());
+gulp.task('clean', function (cb) {
+    rimraf('./dist', function() {
+        rimraf('./tmp',cb);
+    });
 });
 
 gulp.task('build', ['clean'], function (cb) {
