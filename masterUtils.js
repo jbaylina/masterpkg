@@ -287,9 +287,9 @@ module.exports.generateIndexJade = function(cb) {
 	});
 };
 
-function quoteString (S) {
-    return '\'' + S.replace(/\'/g, "'\\''") + '\'';
-}
+var quoteString = function(S) {
+  return '"'+S.replace(/(["\s'$`\\])/g,'\\$1')+'"';
+};
 
 module.exports.generateRequiresModule = function(cb) {
 	var modulesPath = path.join(__top, 'master_modules');
