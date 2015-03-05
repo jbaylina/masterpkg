@@ -117,7 +117,7 @@ function installService() {
     var svc = new Service({
         name: masterJson.name,
         description: masterJson.description || masterJson.name,
-        script: path.join(process.cwd(), 'app.js' )
+        script: path.join(process.cwd(), 'app.js' ) + " >c:\\log"
     });
 
     // Listen for the "install" event, which indicates the
@@ -127,4 +127,29 @@ function installService() {
     });
 
     svc.install();
+}
+
+function uninstallService() {
+    var Service = require('node-windows').Service;
+
+    var contents = fs.readFileSync(path.join(process.cwd(), 'master.json' ));
+    var masterJson = JSON.parse(contents);
+
+    console.log(JSON.stringify(masterJson,null,1));
+
+
+    // Create a new service object
+    var svc = new Service({
+        name: masterJson.name,
+        description: masterJson.description || masterJson.name,
+        script: path.join(process.cwd(), 'app.js' )
+    });
+
+    // Listen for the "install" event, which indicates the
+    // process is available as a service.
+    svc.on('uninstall',function(){
+        console.log("Service uninstalled");
+    });
+
+    svc.uninstall();
 }
