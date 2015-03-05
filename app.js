@@ -6,6 +6,8 @@
 
 var fs = require('fs');
 
+process.chdir(__dirname);
+
 /*
 var access = fs.createWriteStream('/console.log', { flags: 'a' });
 
