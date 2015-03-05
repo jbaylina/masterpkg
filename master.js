@@ -110,6 +110,7 @@ function installService() {
     var contents = fs.readFileSync(path.join(process.cwd(), 'master.json' ));
     var masterJson = JSON.stringify(contents);
 
+    console.log(JSON.stringify(masterJson,null,1));
 
 
     // Create a new service object
