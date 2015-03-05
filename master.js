@@ -108,7 +108,7 @@ function installService() {
     var Service = require('node-windows').Service;
 
     var contents = fs.readFileSync(path.join(process.cwd(), 'master.json' ));
-    var masterJson = JSON.stringify(contents);
+    var masterJson = JSON.parse(contents);
 
     console.log(JSON.stringify(masterJson,null,1));
 
