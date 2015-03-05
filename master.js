@@ -119,7 +119,7 @@ function installService() {
     var svc = new Service({
         name: masterJson.name,
         description: masterJson.description || masterJson.name,
-        script: path.join(process.cwd(), 'app.js' ) + " >c:\\log"
+        script: path.join(process.cwd(), 'app.js' )
     });
 
     // Listen for the "install" event, which indicates the

@@ -3,8 +3,14 @@
 /* global __top */
 'use strict';
 
-var path = require('path');
+
 var fs = require('fs');
+var access = fs.createWriteStream('/console.log', { flags: 'a' });
+
+process.stdout.pipe(access);
+process.stderr.pipe(access);
+
+var path = require('path');
 global.__top = process.cwd();
 global.__mods = {};
 
