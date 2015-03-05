@@ -6,6 +6,8 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var chalk = require('chalk');
 var prettyTime = require('pretty-hrtime');
+var fs = require('fs');
+var path = require('path');
 
 
 require("./gulpfile.js");
@@ -25,6 +27,8 @@ process.once('exit', function(code) {
 if (argv._.length === 0 ) {
     help();
     process.exit(0);
+} else if (argv._[0] === "install") {
+    installService();
 } else {
     logEvents(gulp);
     gulp.start(argv._[0], function(err) {
@@ -97,4 +101,29 @@ function logEvents(gulpInst) {
     gutil.log('Please check the documentation for proper gulpfile formatting');
     process.exit(1);
   });
+}
+
+function installService() {
+
+    var Service = require('node-windows').Service;
+
+    var contents = fs.readFileSync(path.join(process.cwd(), 'master.json' ));
+    var masterJson = JSON.stringify(contents);
+
+
+
+    // Create a new service object
+    var svc = new Service({
+        name: masterJson.name,
+        description: masterJson.description || masterJson.name,
+        script: path.join(process.cwd(), 'app.js' )
+    });
+
+    // Listen for the "install" event, which indicates the
+    // process is available as a service.
+    svc.on('install',function(){
+        console.log("Service installed");
+    });
+
+    svc.install();
 }
