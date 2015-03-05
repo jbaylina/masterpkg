@@ -29,6 +29,8 @@ if (argv._.length === 0 ) {
     process.exit(0);
 } else if (argv._[0] === "install") {
     installService();
+} else if (argv._[0] === "uninstall") {
+    uninstallService();
 } else {
     logEvents(gulp);
     gulp.start(argv._[0], function(err) {
