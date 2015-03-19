@@ -9,6 +9,7 @@ var bower = require('bower');
 // var mainBowerFiles = require('main-bower-files');
 var U=require("underscore");
 var npm = require("npm");
+var glob = require("glob");
 
 global.__top =  process.cwd();
 
@@ -259,7 +260,7 @@ module.exports.generateIndexJade = function(cb) {
 */
 		var html = [];
 		html.push("doctype html");
-		html.push('html(ng-app="app", lang="en")');
+		html.push('html(lang="en")');
 		html.push('\thead');
 /*		cssFiles.forEach(function(f) {
 			var relf = path.relative(topPath, f);
@@ -291,6 +292,7 @@ var quoteString = function(S) {
   return '"'+S.replace(/(["\s'$`\\])/g,'\\$1')+'"';
 };
 
+/*
 module.exports.generateRequiresModule = function(cb) {
 	var modulesPath = path.join(__top, 'master_modules');
 	var output = "";
@@ -310,6 +312,20 @@ module.exports.generateRequiresModule = function(cb) {
 				if (err) return cb(err);
 				fs.writeFile(path.join(__top, "tmp", "modules.js"), output, cb);
 			});
+		});
+	});
+};
+*/
+
+module.exports.generateRequiresModule = function(cb) {
+	var output = "";
+	glob('master_modules/*/client/*.js' , {cwd: __top, realpath:true }, function(err, files) {
+		U.each(files, function(filename) {
+			var module = /.*\/master_modules\/([^\/]*)\/.*/.exec(filename)[1];
+			output += "require(" + quoteString(filename) +");\n";
+		});
+		ensureExists(path.join(__top, "tmp"), function(err2) {
+			fs.writeFile(path.join(__top, "tmp", "modules.js"), output, cb);
 		});
 	});
 };
@@ -379,7 +395,7 @@ function getProjectClientConfig(cb) {
 	});
 }
 
-module.exports.generateClientConfigModule = function(cb) {
+module.exports.getClientConfig = function(cb) {
 	var clientConfig = {};
 	async.series([function(cb2) {
 		getModulesClientConfig(function(err, conf) {
@@ -395,13 +411,18 @@ module.exports.generateClientConfigModule = function(cb) {
 		});
 	}], function(err) {
 		if (err) return cb(err);
+		cb(null, clientConfig);
+	});
+};
+
+module.exports.generateClientConfigModule = function(cb) {
+	exports.getClientConfig(function(err, clientConfig) {
+		if (err) return cb(err);
 		ensureExists(path.join(__top, "tmp"), function(err2) {
 			if (err) return cb(err);
 			fs.writeFile(path.join(__top, "tmp", "client_config.js"), "module.exports = " + JSON.stringify(clientConfig, null, 1) + ";\n", cb);
 		});
 	});
-
-
 };
 
 module.exports.getGulpConfig = function() {

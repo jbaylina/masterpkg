@@ -19,7 +19,7 @@ var rimraf = require('rimraf');
 
 var masterUtils = require('./masterUtils.js');
 
-
+/*
 var gulpConfig = {
 	debug: true
 };
@@ -27,6 +27,9 @@ var gulpConfig = {
 U.extend(gulpConfig, masterUtils.getGulpConfig());
 
 console.log(JSON.stringify(gulpConfig));
+*/
+
+var gulpConfig;
 
 var config = {
 	srcTemplates: './master_modules/*/client/**/*.jade',
@@ -39,6 +42,16 @@ var config = {
 	srcTranslations: ['./dist/app.js', './dist/index.html', './dist/templates/**/*.html']
 };
 
+gulp.task('gulpConfig', function(cb) {
+    masterUtils.getClientConfig(function(err, cc) {
+        if (err) return cb(err);
+        gulpConfig = cc;
+        gulpConfig.debug = true;
+        console.log(JSON.stringify(gulpConfig));
+        cb();
+    });
+});
+
 gulp.task('sass', function () {
     return gulp.src(config.srcSass)
         .pipe(sass())
@@ -47,7 +60,7 @@ gulp.task('sass', function () {
         .pipe(connect.reload());
 });
 
-gulp.task('scripts', ['requiresModule', 'clientConfigModule'], function() {
+gulp.task('scripts', ['requiresModule', 'clientConfigModule', 'gulpConfig'], function() {
     // Single entry point to browserify
     return gulp.src(config.srcScript)
         .pipe(browserify({
@@ -68,7 +81,7 @@ function getTopPath(p) {
 	}
 }
 
-gulp.task('templates', function() {
+gulp.task('templates', ['gulpConfig'], function() {
 	return gulp.src(config.srcTemplates, {base: "./"})
 		.pipe(jade({
 			locals: gulpConfig,
@@ -85,7 +98,7 @@ gulp.task('templates', function() {
 		.pipe(connect.reload());
 });
 
-gulp.task('index', ['indexJade'], function() {
+gulp.task('index', ['indexJade', 'gulpConfig'], function() {
 	return gulp.src(config.srcIndex)
 		.pipe(jade({
 			locals: gulpConfig,
@@ -141,19 +154,18 @@ gulp.task('clean', function (cb) {
 });
 
 gulp.task('build', ['clean'], function (cb) {
-	runSequence(["scripts","templates","index","static", 'bower_components', 'sass', 'translations'], cb);
+	runSequence(["scripts","templates","index","static", 'bower_components', 'sass', 'translations', 'app'], cb);
 });
 
 gulp.task('watch', function() {
-	gulp.watch(config.srcTemplates, ['templates']);
-	gulp.watch(config.srcIndex, ['index']);
+	gulp.watch(config.srcTemplates, ['templates', 'index']);
 	gulp.watch(config.srcPackages, ['index']);
 	gulp.watch(config.srcStatic, ['static']);
 	gulp.watch(config.srcScripts, ['scripts']);
 	gulp.watch(config.srcSass, ['sass']);
 });
 
-gulp.task('client', ['build'], function () {
+gulp.task('monitorServer', function () {
   connect.server({
     root: './dist',
     port: 3001,
@@ -162,6 +174,10 @@ gulp.task('client', ['build'], function () {
       return [ historyApiFallback ];
     }
   });
+});
+
+gulp.task('client', ['build'], function (cb) {
+    runSequence('monitorServer', 'watch', cb);
 });
 
 gulp.task('bower', masterUtils.generateBowers);
@@ -178,6 +194,6 @@ gulp.task('app', function() {
 gulp.task('server', ['app', 'npm', 'build'], shell.task(["node app.js"]));
 
 gulp.task('default', ['build'], function (cb) {
-	runSequence('client', 'watch', cb);
+	runSequence('monitorServer', 'watch', cb);
 });
 
