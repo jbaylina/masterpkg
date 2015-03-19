@@ -321,7 +321,7 @@ module.exports.generateRequiresModule = function(cb) {
 	var output = "";
 	glob('master_modules/*/client/*.js' , {cwd: __top, realpath:true }, function(err, files) {
 		U.each(files, function(filename) {
-			var module = /.*\/master_modules\/([^\/]*)\/.*/.exec(filename)[1];
+			var module = /.*[\/\\]master_modules[\/\\]([^\/\\]*)[\/\\].*/.exec(filename)[1];
 			output += "require(" + quoteString(filename) +");\n";
 		});
 		ensureExists(path.join(__top, "tmp"), function(err2) {
