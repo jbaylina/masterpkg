@@ -35,7 +35,7 @@
     "node-windows": "0.1.7"
   },
   "bin": {
-    "masterpkg": "masterpkg.js"
+    "masterpkg": "masterpkg"
   },
   "repository": {
     "type": "git",

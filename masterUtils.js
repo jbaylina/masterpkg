@@ -391,7 +391,22 @@ function getProjectClientConfig(cb) {
 		if (masterJson.clientConfig) {
 			U.extend(clientConfig, masterJson.clientConfig);
 		}
-		cb(null, clientConfig);
+		fs.readFile(path.join(__top, 'config.json' ), function(err, data) {
+			if (err) return cb(null, {});
+			var configJson;
+			try {
+				configJson = JSON.parse(data);
+			} catch (err) {
+				return cb(null, {});
+			}
+			if (configJson.commonConfig) {
+				U.extend(clientConfig, configJson.commonConfig);
+			}
+			if (configJson.clientConfig) {
+				U.extend(clientConfig, configJson.clientConfig);
+			}
+			cb(null, clientConfig);
+		});
 	});
 }
 
