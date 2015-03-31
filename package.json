@@ -1,6 +1,6 @@
 {
   "name": "masterpkg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Utilities to manage master framework.",
   "main": "master.js",
   "scripts": {
