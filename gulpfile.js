@@ -46,7 +46,7 @@ gulp.task('gulpConfig', function(cb) {
     masterUtils.getClientConfig(function(err, cc) {
         if (err) return cb(err);
         gulpConfig = cc;
-        gulpConfig.debug = true;
+        gulpConfig.release = !!global.release;
         console.log(JSON.stringify(gulpConfig));
         cb();
     });
@@ -65,7 +65,7 @@ gulp.task('scripts', ['requiresModule', 'clientConfigModule', 'gulpConfig'], fun
     return gulp.src(config.srcScript)
         .pipe(browserify({
           insertGlobals : true,
-          debug : gulpConfig.debug
+          debug : !gulpConfig.release
         }))
         .pipe(rename('app.js'))
         .pipe(gulp.dest('./dist/'))
@@ -85,7 +85,7 @@ gulp.task('templates', ['gulpConfig'], function() {
 	return gulp.src(config.srcTemplates, {base: "./"})
 		.pipe(jade({
 			locals: gulpConfig,
-			pretty: gulpConfig.debug
+			pretty: !gulpConfig.release
 		}))
 		.pipe(rename(function(p) {
 			var a = path.relative("./master_modules", p.dirname);
@@ -102,7 +102,7 @@ gulp.task('index', ['indexJade', 'gulpConfig'], function() {
 	return gulp.src(config.srcIndex)
 		.pipe(jade({
 			locals: gulpConfig,
-			pretty: gulpConfig.debug
+			pretty: !gulpConfig.release
 		}))
 		.pipe(gulp.dest('./dist/'))
 		.pipe(connect.reload());

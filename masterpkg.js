@@ -25,6 +25,10 @@ process.once('exit', function(code) {
   }
 });
 
+if ((argv.r) || (argv.release)) {
+  global.release = true;
+}
+
 if (argv._.length === 0 ) {
     help();
     process.exit(0);

@@ -3,6 +3,7 @@
 /* global __top */
 'use strict';
 
+process.env.TZ = 'UTC';
 
 var fs = require('fs');
 
