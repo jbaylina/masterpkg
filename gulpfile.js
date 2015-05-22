@@ -1,4 +1,6 @@
 /*jslint node: true */
+/* global __mods */
+/* global __top */
 "use strict";
 
 var gulp = require('gulp');
@@ -16,18 +18,18 @@ var async = require('async');
 var path = require('path');
 var U = require('underscore');
 var rimraf = require('rimraf');
+var fs = require('fs');
+
+
+
+global.__top = process.cwd();
+global.__mods = {};
+
+var masterConfigString = fs.readFileSync(path.join(__top, 'config.json'));
+var masterConfig = JSON.parse(masterConfigString);
+var modules = global.__mods.masterModules = masterConfig.masterModules;
 
 var masterUtils = require('./masterUtils.js');
-
-/*
-var gulpConfig = {
-	debug: true
-};
-
-U.extend(gulpConfig, masterUtils.getGulpConfig());
-
-console.log(JSON.stringify(gulpConfig));
-*/
 
 var gulpConfig;
 
@@ -47,7 +49,6 @@ gulp.task('gulpConfig', function(cb) {
         if (err) return cb(err);
         gulpConfig = cc;
         gulpConfig.release = !!global.release;
-        console.log(JSON.stringify(gulpConfig));
         cb();
     });
 });
@@ -187,8 +188,8 @@ gulp.task('requiresModule', masterUtils.generateRequiresModule);
 gulp.task('clientConfigModule', masterUtils.generateClientConfigModule);
 
 gulp.task('app', function() {
-    return gulp.src(path.join(__dirname, "app.js"))
-        .pipe(gulp.dest("./"));
+    return gulp.src([path.join(__dirname,  "app.js"), path.join(__dirname, "core" , "**")], {base: __dirname})
+        .pipe(gulp.dest("."));
 });
 
 gulp.task('server', ['app', 'npm', 'build'], shell.task(["node app.js"]));

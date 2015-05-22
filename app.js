@@ -19,8 +19,15 @@ var path = require('path');
 global.__top = process.cwd();
 global.__mods = {};
 
+__mods.config = require('./core/config');
+
+var masterConfigString = fs.readFileSync(path.join(__top, 'config.json'));
+var masterConfig = JSON.parse(masterConfigString);
+var modules = __mods.masterModules = masterConfig.masterModules;
+
+
 // Load all mods
-fs.readdirSync(path.join(__top, "master_modules")).forEach(function(module) {
+modules.forEach(function(module) {
 	var filename = path.join(__top, "master_modules", module, "server", "index.js");
     if (fs.existsSync(filename)) {
 		__mods[module] = require(filename);
