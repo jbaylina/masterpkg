@@ -4,7 +4,7 @@
 "use strict";
 
 var gulp = require('gulp');
-var jade = require('gulp-jade');
+var gjade = require('gulp-jade');
 var rename = require("gulp-rename");
 var runSequence = require('run-sequence');
 var browserify = require('gulp-browserify');
@@ -19,6 +19,9 @@ var path = require('path');
 var U = require('underscore');
 var rimraf = require('rimraf');
 var fs = require('fs');
+var glob = require("glob");
+var jade = require('jade');
+var mkdirp = require('mkdirp');
 
 
 
@@ -82,44 +85,69 @@ function getTopPath(p) {
 	}
 }
 
-gulp.task('templates', ['gulpConfig'], function() {
-	return gulp.src(config.srcTemplates, {base: "./"})
-		.pipe(jade({
-			locals: gulpConfig,
-			pretty: !gulpConfig.release
-		}))
-		.pipe(rename(function(p) {
-			var a = path.relative("./master_modules", p.dirname);
-			var module = getTopPath(a);
-			var b = path.relative(path.join("master_modules", module, "client"), p.dirname);
-			var c = path.join("/", module, b);
-			p.dirname = c;
-		}))
-		.pipe(gulp.dest('./dist/templates/'))
-		.pipe(connect.reload());
+function writeFileD(filename, data, options, cb) {
+	if (typeof options === "function") {
+		cb = options;
+		options = {};
+	}
+	mkdirp(path.dirname(filename), options, function(err) {
+		if (err) return cb(err);
+		fs.writeFile(filename, data, options, cb);
+	});
+}
+
+gulp.task('templates', ['gulpConfig'], function(cb) {
+	async.each(modules, function(module, cb) {
+		glob('master_modules/'+module+'/client/**/*.jade' , {cwd: __top, realpath:true }, function(err, files) {
+			if (err) return cb(err);
+			async.each(files, function(f, cb) {
+				fs.readFile(f, function(err, content) {
+					if (err) return cb(err);
+					try {
+						var fn = jade.compile(content,{ pretty: !gulpConfig.release, filename: f});
+						var output = fn(gulpConfig);
+						var relName = path.relative(path.join("master_modules", module, "client"), f);
+						relName = relName.substr(0, relName.lastIndexOf('.')) + ".html";
+						var outName = path.join("dist", "templates", module, relName);
+						writeFileD(outName, output, cb);
+					} catch(err) {
+						cb(err);
+					}
+				});
+			}, cb);
+		});
+	}, cb);
 });
 
-gulp.task('index', ['indexJade', 'gulpConfig'], function() {
-	return gulp.src(config.srcIndex)
-		.pipe(jade({
-			locals: gulpConfig,
-			pretty: !gulpConfig.release
-		}))
-		.pipe(gulp.dest('./dist/'))
-		.pipe(connect.reload());
+gulp.task('index', ['indexJade', 'gulpConfig'], function(cb) {
+
+	fs.readFile('./tmp/index.jade', function(err, content) {
+		if (err) return cb(err);
+		try {
+			var fn = jade.compile(content,{ pretty: !gulpConfig.release, filename: path.join(__top, "tmp" , 'index.jade')});
+			var output = fn(gulpConfig);
+			writeFileD('./dist/index.html', output, cb);
+		} catch(err) {
+			cb(err);
+		}
+	});
 });
 
-gulp.task('static', function() {
-	return gulp.src(config.srcStatic, {base: "./"})
-		.pipe(rename(function(p) {
-			var a = path.relative("./master_modules", p.dirname);
-			var module = getTopPath(a);
-			var b = path.relative(path.join("master_modules", module, "client", "static"), p.dirname);
-			var c = path.join("/", b);
-			p.dirname = c;
-		}))
-		.pipe(gulp.dest('./dist/'))
-		.pipe(connect.reload());
+gulp.task('static', function(cb) {
+	async.each(modules, function(module, cb) {
+		glob(path.join('master_modules',module,'client','static', '**') ,
+		 {cwd: __top, realpath:true, nodir:true }, function(err, files) {
+		 	if (err) return cb(err);
+			async.each(files, function(f, cb) {
+				fs.readFile(f, function(err, content) {
+					if (err) return cb(err);
+					var relName = path.relative(path.join("master_modules", module, "client", "static"), f);
+					var outName = path.join("dist", relName);
+					writeFileD(outName, content, cb);
+				});
+			}, cb);
+		});
+	}, cb);
 });
 
 

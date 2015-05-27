@@ -24,10 +24,11 @@ module.exports.generateBowers = function(cb) {
 		dependencies: {}
 	};
 	async.each(modules, function(module, cb2) {
+		var moduleName = "masterModule_" + module.replace("/","_");
 		var jsonFile = path.join(modulesPath, module, 'master.json');
 		fs.exists(jsonFile, function(exists) {
 			if (exists) {
-				mainBower.dependencies["masterModule_"+module]= path.join(modulesPath, module);
+				mainBower.dependencies[moduleName]= path.join(modulesPath, module);
 				fs.readFile(jsonFile, function(err, contents) {
 					if (err) return cb2(err);
 					var mMasterConfig;
@@ -37,7 +38,7 @@ module.exports.generateBowers = function(cb) {
 						return cb2(err2);
 					}
 					var mBowerConfig = {
-						name: "masterModule_"+module,
+						name: moduleName,
 						dependencies: mMasterConfig.bowerDependencies,
 						ignore: ["*", "!bower.json"]
 					};

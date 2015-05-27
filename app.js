@@ -19,12 +19,13 @@ var path = require('path');
 global.__top = process.cwd();
 global.__mods = {};
 
-__mods.config = require('./core/config');
+
 
 var masterConfigString = fs.readFileSync(path.join(__top, 'config.json'));
 var masterConfig = JSON.parse(masterConfigString);
 var modules = __mods.masterModules = masterConfig.masterModules;
 
+__mods.config = require('./core/config');
 
 // Load all mods
 modules.forEach(function(module) {

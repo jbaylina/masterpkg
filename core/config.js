@@ -1,4 +1,5 @@
 /*jslint node: true */
+/* global __mods */
 "use strict";
 
 var nconf = require( 'nconf' );
@@ -11,7 +12,8 @@ nconf.env().argv();
 
 // Read the defaults for all modules.
 var defaults={};
-fs.readdirSync(path.join(top, "master_modules")).forEach(function(module) {
+
+__mods.masterModules.forEach(function (module) {
 	var filename = path.join(top, "master_modules", module, "master.json");
 	if (fs.existsSync(filename)) {
 		var modueJsonString = fs.readFileSync(filename);
