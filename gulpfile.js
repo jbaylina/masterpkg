@@ -1,15 +1,12 @@
 /*jslint node: true */
-/* global __mods */
-/* global __top */
+
 "use strict";
 
 var gulp = require('gulp');
-var gjade = require('gulp-jade');
 var rename = require("gulp-rename");
 var runSequence = require('run-sequence');
-var browserify = require('gulp-browserify');
 var connect = require('gulp-connect');
-var sass   = require('gulp-sass');
+var sass   = require('node-sass');
 var concat = require('gulp-concat');
 var gettext = require('gulp-angular-gettext');
 var shell = require('gulp-shell');
@@ -23,57 +20,62 @@ var glob = require("glob");
 var jade = require('jade');
 var mkdirp = require('mkdirp');
 
+var browserify = require('browserify');
 
-
-global.__top = process.cwd();
-global.__mods = {};
-
-var masterConfigString = fs.readFileSync(path.join(__top, 'config.json'));
-var masterConfig = JSON.parse(masterConfigString);
-var modules = global.__mods.masterModules = masterConfig.masterModules;
+var config = require('./core/config.js');
 
 var masterUtils = require('./masterUtils.js');
 
-var gulpConfig;
-
-var config = {
-	srcTemplates: './master_modules/*/client/**/*.jade',
-	srcIndex: './tmp/index.jade',
-	srcStatic: ['./master_modules/*/client/static/*', './master_modules/*/client/static/*/**'],
-	srcScript: './tmp/modules.js',
-	srcScripts: './master_modules/**/*.js',
-	srcSass: './master_modules/**/*.sass',
-	srcPackages: ['./master_modules/*/master.json', './master.json'],
-	srcTranslations: ['./dist/app.js', './dist/index.html', './dist/templates/**/*.html']
+var watchFiles = {
+	templates: [],
+	indexes: [],
+	statics: [],
+	scripts: [],
+	sass: []
 };
 
-gulp.task('gulpConfig', function(cb) {
-    masterUtils.getClientConfig(function(err, cc) {
-        if (err) return cb(err);
-        gulpConfig = cc;
-        gulpConfig.release = !!global.release;
-        cb();
-    });
+gulp.task('sass', function(cb) {
+	var buff = "";
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		glob(path.join(module.dir, 'client/**/*.scss') , {realpath:true }, function(err, files) {
+			if (err) return cb(err);
+			async.each(files, function(f, cb) {
+				watchFiles.sass.push(f);
+				sass.render({
+					file: f
+				}, function(err, result) {
+					if (err) return cb(err);
+					buff += result.css.toString();
+					cb();
+				});
+			}, function(err) {
+				if (err) return cb(err);
+				writeFileD('./dist/app.css', buff, cb);
+			});
+		});
+	}, cb);
 });
 
-gulp.task('sass', function () {
-    return gulp.src(config.srcSass)
-        .pipe(sass())
-        .pipe(concat('app.css'))
-        .pipe(gulp.dest('./dist/'))
-        .pipe(connect.reload());
+gulp.task('reloadSass', ['sass'], function() {
+	return connect.reload();
 });
 
-gulp.task('scripts', ['requiresModule', 'clientConfigModule', 'gulpConfig'], function() {
+gulp.task('scripts', ['requiresModule', 'clientConfigModule'], function(cb) {
     // Single entry point to browserify
-    return gulp.src(config.srcScript)
-        .pipe(browserify({
-          insertGlobals : true,
-          debug : !gulpConfig.release
-        }))
-        .pipe(rename('app.js'))
-        .pipe(gulp.dest('./dist/'))
-        .pipe(connect.reload());
+    var b = browserify();
+    b.add(path.join('tmp', 'modules.js'),{
+					insertGlobals : true,
+          			debug : !config.gulpConfig.release
+				});
+	b.bundle(function(err, buff) {
+		if (err) return cb(err);
+		writeFileD('./dist/app.js', buff, cb);
+	});
+});
+
+gulp.task('reloadScripts', ['scripts'], function() {
+	return connect.reload();
 });
 
 function getTopPath(p) {
@@ -96,19 +98,20 @@ function writeFileD(filename, data, options, cb) {
 	});
 }
 
-gulp.task('templates', ['gulpConfig'], function(cb) {
-	async.each(modules, function(module, cb) {
-		glob('master_modules/'+module+'/client/**/*.jade' , {cwd: __top, realpath:true }, function(err, files) {
+gulp.task('templates', function(cb) {
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		glob(path.join(module.dir, 'client/**/*.jade') , {realpath:true }, function(err, files) {
 			if (err) return cb(err);
 			async.each(files, function(f, cb) {
+				watchFiles.templates.push(f);
 				fs.readFile(f, function(err, content) {
 					if (err) return cb(err);
 					try {
-						var fn = jade.compile(content,{ pretty: !gulpConfig.release, filename: f});
-						var output = fn(gulpConfig);
-						var relName = path.relative(path.join("master_modules", module, "client"), f);
-						relName = relName.substr(0, relName.lastIndexOf('.')) + ".html";
-						var outName = path.join("dist", "templates", module, relName);
+						var fn = jade.compile(content,{ pretty: !config.gulpConfig.release, filename: f});
+						var output = fn(config.gulpConfig);
+						var basename = path.basename(f,'.jade');
+						var outName = path.join("dist", "templates", moduleName, basename + ".html");
 						writeFileD(outName, output, cb);
 					} catch(err) {
 						cb(err);
@@ -119,13 +122,12 @@ gulp.task('templates', ['gulpConfig'], function(cb) {
 	}, cb);
 });
 
-gulp.task('index', ['indexJade', 'gulpConfig'], function(cb) {
-
+gulp.task('index', ['indexJade'], function(cb) {
 	fs.readFile('./tmp/index.jade', function(err, content) {
 		if (err) return cb(err);
 		try {
-			var fn = jade.compile(content,{ pretty: !gulpConfig.release, filename: path.join(__top, "tmp" , 'index.jade')});
-			var output = fn(gulpConfig);
+			var fn = jade.compile(content,{ pretty: !config.gulpConfig.release, filename: path.join(process.cwd(), "tmp" , 'index.jade')});
+			var output = fn(config.gulpConfig);
 			writeFileD('./dist/index.html', output, cb);
 		} catch(err) {
 			cb(err);
@@ -133,15 +135,21 @@ gulp.task('index', ['indexJade', 'gulpConfig'], function(cb) {
 	});
 });
 
+gulp.task('reloadTemplates', ['templates', 'index'], function() {
+	return connect.reload();
+});
+
 gulp.task('static', function(cb) {
-	async.each(modules, function(module, cb) {
-		glob(path.join('master_modules',module,'client','static', '**') ,
-		 {cwd: __top, realpath:true, nodir:true }, function(err, files) {
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		glob(path.join(module.dir,'client','static', '**') ,
+		 {realpath:true, nodir:true }, function(err, files) {
 		 	if (err) return cb(err);
 			async.each(files, function(f, cb) {
+				watchFiles.statics.push(f);
 				fs.readFile(f, function(err, content) {
 					if (err) return cb(err);
-					var relName = path.relative(path.join("master_modules", module, "client", "static"), f);
+					var relName = path.relative(path.join(module.dir, "client", "static"), f);
 					var outName = path.join("dist", relName);
 					writeFileD(outName, content, cb);
 				});
@@ -150,10 +158,14 @@ gulp.task('static', function(cb) {
 	}, cb);
 });
 
+gulp.task('reloadStatic', ['static'], function() {
+	return connect.reload();
+});
+
 
 
 gulp.task('pot', ['index','templates'], function() {
-	return gulp.src(config.srcTranslations)
+	return gulp.src(['./dist/app.js', './dist/index.html', './dist/templates/**/*.html'])
         .pipe(gettext.extract('./translations/template.pot', {
             // options to pass to angular-gettext-tools...
         }))
@@ -186,12 +198,11 @@ gulp.task('build', ['clean'], function (cb) {
 	runSequence(["scripts","templates","index","static", 'bower_components', 'sass', 'translations', 'app'], cb);
 });
 
-gulp.task('watch', function() {
-	gulp.watch(config.srcTemplates, ['templates', 'index']);
-	gulp.watch(config.srcPackages, ['index']);
-	gulp.watch(config.srcStatic, ['static']);
-	gulp.watch(config.srcScripts, ['scripts']);
-	gulp.watch(config.srcSass, ['sass']);
+gulp.task('watch', ['build'], function() {
+	gulp.watch(watchFiles.templates, ['reloadTemplates']);
+	gulp.watch(watchFiles.statics, ['reloadStatic']);
+	gulp.watch(watchFiles.scripts, ['reloadScripts']);
+	gulp.watch(watchFiles.sass, ['reloadSass']);
 });
 
 gulp.task('monitorServer', function () {

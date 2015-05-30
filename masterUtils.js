@@ -1,6 +1,4 @@
 /*jslint node: true */
-/*global __top */
-/*global __mods */
 
 "use strict";
 
@@ -13,45 +11,43 @@ var U=require("underscore");
 var npm = require("npm");
 var glob = require("glob");
 
-global.__top =  process.cwd();
-var modules = global.__mods.masterModules;
+var config=require('./core/config.js');
 
 module.exports.generateBowers = function(cb) {
-	var modulesPath = path.join(__top, 'master_modules');
-
 	var mainBower = {
 		name: "master",
 		dependencies: {}
 	};
-	async.each(modules, function(module, cb2) {
-		var moduleName = "masterModule_" + module.replace("/","_");
-		var jsonFile = path.join(modulesPath, module, 'master.json');
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		var bModuleName = "masterModule_" + moduleName;
+		var jsonFile = path.join(module.dir, 'master.json');
 		fs.exists(jsonFile, function(exists) {
 			if (exists) {
-				mainBower.dependencies[moduleName]= path.join(modulesPath, module);
+				mainBower.dependencies[bModuleName]= module.dir;
 				fs.readFile(jsonFile, function(err, contents) {
-					if (err) return cb2(err);
+					if (err) return cb(err);
 					var mMasterConfig;
 					try {
 						mMasterConfig = JSON.parse(contents);
 					} catch (err2) {
-						return cb2(err2);
+						return cb(err2);
 					}
 					var mBowerConfig = {
-						name: moduleName,
+						name: bModuleName,
 						dependencies: mMasterConfig.bowerDependencies,
 						ignore: ["*", "!bower.json"]
 					};
-					fs.writeFile(path.join(modulesPath, module, "bower.json"), JSON.stringify(mBowerConfig, null, 1), cb2);
+					fs.writeFile(path.join(module.dir, "bower.json"), JSON.stringify(mBowerConfig, null, 1), cb);
 				});
 			} else {
-				cb2();
+				cb();
 			}
 		});
 
 	}, function(err) {
 		if (err) return (err);
-		fs.writeFile(path.join(__top, "bower.json"), JSON.stringify(mainBower, null, 1), function(err) {
+		fs.writeFile(path.join(process.cwd(), "bower.json"), JSON.stringify(mainBower, null, 1), function(err) {
 			if (err) return err;
 			bower.commands.install().on('end', function(results) {
 				cb();
@@ -60,103 +56,38 @@ module.exports.generateBowers = function(cb) {
 	});
 };
 
-module.exports.generateNpmPackagesOld = function(cb) {
-	var modulesPath = path.join(__top, 'master_modules');
-
-	var mainNpm = {
-		name: "master",
-		dependencies: {}
-	};
-	async.each(modules, function(module, cb2) {
-		var jsonFile = path.join(modulesPath, module, 'master.json');
-		fs.exists(jsonFile, function(exists) {
-			if (exists) {
-				mainNpm.dependencies["masterModule_"+module]= "file:" + path.join(modulesPath, module);
-				fs.readFile(jsonFile, function(err, contents) {
-					if (err) return cb2(err);
-					var mMasterConfig;
-					try {
-						mMasterConfig = JSON.parse(contents);
-					} catch (err2) {
-						return cb2(err2);
-					}
-					var mNpmConfig = {
-						name: "masterModule_"+module,
-						version: mMasterConfig.version || "0.0.1",
-						dependencies: mMasterConfig.npmDependencies,
-						ignore: ["*", "!package.json"]
-					};
-					fs.writeFile(path.join(modulesPath, module, "package.json"), JSON.stringify(mNpmConfig, null, 1), function(err) {
-						if (err) return cb2(err);
-						fs.writeFile(path.join(modulesPath, module, ".npmignore"), "*\n!package.json\n", cb2);
-					});
-				});
-			} else {
-				cb2();
-			}
-		});
-
-	}, function(err) {
-		if (err) return (err);
-		fs.readFile(path.join(__top, "master.json"), function(err, contents) {
-			if (!err) {
-					var mainConfig;
-					try {
-						mainConfig = JSON.parse(contents);
-					} catch (err2) {
-					}
-					for (var d in mainConfig.npmDependencies) {
-						mainNpm.dependencies[d] = mainConfig.npmDependencies[d];
-					}
-					mainNpm . version = mainConfig.version || "0.0.1";
-			}
-			fs.writeFile(path.join(__top, "package.json"), JSON.stringify(mainNpm, null, 1), function(err) {
-				if (err) return err;
-				npm.load({}, function (err, npm) {
-				  // use the npm object, now that it's loaded.
-				  //
-				  if (err) return cb(err);
-
-				  npm.commands.install([], cb);
-				});
-			});
-		});
-	});
-
-};
 
 module.exports.generateNpmPackages = function(cb) {
-	var modulesPath = path.join(__top, 'master_modules');
-
 	var mainNpm = {
 		name: "master",
 		dependencies: {}
 	};
-	async.each(modules, function(module, cb2) {
-		var jsonFile = path.join(modulesPath, module, 'master.json');
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		var jsonFile = path.join(module.dir, 'master.json');
 		fs.exists(jsonFile, function(exists) {
 			if (exists) {
 				fs.readFile(jsonFile, function(err, contents) {
-					if (err) return cb2(err);
+					if (err) return cb(err);
 					var mMasterConfig;
 					try {
 						mMasterConfig = JSON.parse(contents);
 					} catch (err2) {
-						return cb2(err2);
+						return cb(err2);
 					}
 					for (var d in mMasterConfig.npmDependencies) {
 						mainNpm.dependencies[d] = mMasterConfig.npmDependencies[d];
 					}
-					cb2();
+					cb();
 				});
 			} else {
-				cb2();
+				cb();
 			}
 		});
 
 	}, function(err) {
 		if (err) return (err);
-		fs.readFile(path.join(__top, "master.json"), function(err, contents) {
+		fs.readFile(path.join(process.cwd(), "master.json"), function(err, contents) {
 			if (!err) {
 					var mainConfig;
 					try {
@@ -171,7 +102,7 @@ module.exports.generateNpmPackages = function(cb) {
 					mainNpm.repository = mainConfig.repository || ".";
 					mainNpm.license = mainConfig.license || "Private";
 			}
-			fs.writeFile(path.join(__top, "package.json"), JSON.stringify(mainNpm, null, 1), function(err) {
+			fs.writeFile(path.join(process.cwd(), "package.json"), JSON.stringify(mainNpm, null, 1), function(err) {
 				if (err) return err;
 				npm.load({}, function (err, npm) {
 				  // use the npm object, now that it's loaded.
@@ -204,12 +135,12 @@ function ensureExists(path, mask, cb) {
 function getHeadBodyTemplates(cb) {
 	var headTemplates = [];
 	var bodyTemplates = [];
-	var modulesPath = path.join(__top, 'master_modules');
-	async.each(modules, function(module, cb2) {
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
 
 		async.parallel([
 			function(cb3) {
-				var headFile=path.join(modulesPath, module, "client", "head.jade");
+				var headFile=path.join(module.dir, "client", "head.jade");
 				fs.exists(headFile , function(exist) {
 					if (exist) {
 						headTemplates.push(headFile);
@@ -218,7 +149,7 @@ function getHeadBodyTemplates(cb) {
 				});
 			},
 			function(cb3) {
-				var bodyFile=path.join(modulesPath, module, "client", "body.jade");
+				var bodyFile=path.join(module.dir, "client", "body.jade");
 				fs.exists(bodyFile , function(exist) {
 					if (exist) {
 						bodyTemplates.push(bodyFile);
@@ -226,7 +157,7 @@ function getHeadBodyTemplates(cb) {
 					cb3();
 				});
 			},
-		], cb2);
+		], cb);
 
 
 	}, function(err) {
@@ -236,33 +167,20 @@ function getHeadBodyTemplates(cb) {
 }
 
 module.exports.generateIndexJade = function(cb) {
-	var tmpPath = path.join(__top, "tmp");
+	var tmpPath = path.join(process.cwd(), "tmp");
 
 
 	getHeadBodyTemplates(function(err, headTemplates, bodyTemplates) {
 		if (err) return cb(err);
 
-//		var files = mainBowerFiles({});
 		var jsFiles = [];
 		var cssFiles = [];
-/*		files.forEach(function(f) {
-			var ext = path.extname(f);
-			if (ext==='.js') {
-				jsFiles.push(f);
-			} else if (ext==='.css') {
-				cssFiles.push(f);
-			}
-		});
-*/
+
 		var html = [];
 		html.push("doctype html");
 		html.push('html(lang="en")');
 		html.push('\thead');
-/*		cssFiles.forEach(function(f) {
-			var relf = path.relative(topPath, f);
-			html.push('\t\tlink(rel="stylesheet",href="'+ relf +'")');
-		});
-*/		headTemplates.forEach(function(f) {
+		headTemplates.forEach(function(f) {
 			html.push("\t\tinclude "+path.relative(tmpPath, f));
 		});
 		html.push('\t\tlink(rel="stylesheet",href="app.css")');
@@ -270,11 +188,7 @@ module.exports.generateIndexJade = function(cb) {
 		bodyTemplates.forEach(function(f) {
 			html.push("\t\tinclude "+path.relative(tmpPath, f));
 		});
-/*		jsFiles.forEach(function(f) {
-			var relf = path.relative(topPath, f);
-			html.push('\t\tscript(src="'+ relf +'")');
-		});
-*/		html.push('\t\tscript(src="app.js")');
+		html.push('\t\tscript(src="app.js")');
 		html.push('');
 
 		ensureExists(tmpPath, function(err) {
@@ -288,35 +202,12 @@ var quoteString = function(S) {
   return '"'+S.replace(/(["\s'$`\\])/g,'\\$1')+'"';
 };
 
-/*
-module.exports.generateRequiresModule = function(cb) {
-	var modulesPath = path.join(__top, 'master_modules');
-	var output = "";
-	fs.readdir(modulesPath, function(err, modules) {
-		if (err) return cb(err);
-		async.each(modules, function(module, cb2) {
-			var indexName = path.join(__top, 'master_modules', module, 'client', 'index.js');
-			fs.exists(indexName, function(exists) {
-				if (exists) {
-					output += "module.exports." + module + "= require(" + quoteString(indexName) +");\n";
-				}
-				cb2();
-			});
-		}, function(err) {
-			if (err) return cb(err);
-			ensureExists(path.join(__top, "tmp"), function(err2) {
-				if (err) return cb(err);
-				fs.writeFile(path.join(__top, "tmp", "modules.js"), output, cb);
-			});
-		});
-	});
-};
-*/
 
 module.exports.generateRequiresModule = function(cb) {
 	var output = "";
-	async.each(modules, function(module, cb) {
-		glob('master_modules/'+module+'/client/*.js' , {cwd: __top, realpath:true }, function(err, files) {
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		glob(path.join(module.dir, 'client', '**', '*.js' ), {realpath:true }, function(err, files) {
 			U.each(files, function(filename) {
 				output += "require(" + quoteString(filename) +");\n";
 			});
@@ -324,128 +215,19 @@ module.exports.generateRequiresModule = function(cb) {
 		});
 	}, function(err) {
 		if (err) return cb(err);
-		ensureExists(path.join(__top, "tmp"), function(err2) {
-			fs.writeFile(path.join(__top, "tmp", "modules.js"), output, cb);
+		ensureExists(path.join(process.cwd(), "tmp"), function(err2) {
+			fs.writeFile(path.join(process.cwd(), "tmp", "modules.js"), output, cb);
 		});
 	});
 };
 
-function getModuleClientConfig(module, cb2) {
-	var clientConfig = {};
-	var masterJsonFile = path.join(__top, 'master_modules', module, 'master.json');
-	fs.exists(masterJsonFile, function(exists) {
-		if (exists) {
-			fs.readFile(masterJsonFile, function(err, data) {
-				if (err) return cb2(err);
-				var masterJson;
-				try {
-					masterJson = JSON.parse(data);
-				} catch (err) {
-					return cb2(err);
-				}
-				if (masterJson.commonConfig) {
-					U.extend(clientConfig, masterJson.commonConfig);
-				}
-				if (masterJson.clientConfig) {
-					U.extend(clientConfig, masterJson.clientConfig);
-				}
-				cb2(null,clientConfig);
-			});
-		} else {
-			cb2(null, clientConfig);
-		}
-	});
-}
-
-function getModulesClientConfig(cb) {
-	var modulesPath = path.join(__top, 'master_modules');
-	var clientConfig = {};
-	async.each(modules, function(module, cb2) {
-		getModuleClientConfig(module, function(err, conf) {
-			if (err) return cb2(err);
-			U.extend(clientConfig, conf);
-			cb2();
-		});
-	}, function(err) {
-		if (err) return cb(err);
-		cb(null, clientConfig);
-	});
-}
-
-function getProjectClientConfig(cb) {
-	var clientConfig = {};
-	fs.readFile(path.join(__top, 'master.json' ), function(err, data) {
-		if (err) return cb(null, {});
-		var masterJson;
-		try {
-			masterJson = JSON.parse(data);
-		} catch (err) {
-			return cb(null, {});
-		}
-		if (masterJson.commonConfig) {
-			U.extend(clientConfig, masterJson.commonConfig);
-		}
-		if (masterJson.clientConfig) {
-			U.extend(clientConfig, masterJson.clientConfig);
-		}
-		fs.readFile(path.join(__top, 'config.json' ), function(err, data) {
-			if (err) return cb(null, {});
-			var configJson;
-			try {
-				configJson = JSON.parse(data);
-			} catch (err) {
-				return cb(null, {});
-			}
-			if (configJson.commonConfig) {
-				U.extend(clientConfig, configJson.commonConfig);
-			}
-			if (configJson.clientConfig) {
-				U.extend(clientConfig, configJson.clientConfig);
-			}
-			cb(null, clientConfig);
-		});
-	});
-}
-
-module.exports.getClientConfig = function(cb) {
-	var clientConfig = {};
-	async.series([function(cb2) {
-		getModulesClientConfig(function(err, conf) {
-			if (err) return cb2(err);
-			U.extend(clientConfig, conf);
-			cb2();
-		});
-	}, function(cb2) {
-		getProjectClientConfig(function(err, conf) {
-			if (err) return cb2(err);
-			U.extend(clientConfig, conf);
-			cb2();
-		});
-	}], function(err) {
-		if (err) return cb(err);
-		cb(null, clientConfig);
-	});
-};
 
 module.exports.generateClientConfigModule = function(cb) {
-	exports.getClientConfig(function(err, clientConfig) {
+	ensureExists(path.join(process.cwd(), "tmp"), function(err) {
 		if (err) return cb(err);
-		ensureExists(path.join(__top, "tmp"), function(err2) {
-			if (err) return cb(err);
-			fs.writeFile(path.join(__top, "tmp", "client_config.js"), "module.exports = " + JSON.stringify(clientConfig, null, 1) + ";\n", cb);
-		});
+		fs.writeFile(path.join(process.cwd(), "tmp", "client_config.js"), "module.exports = " + JSON.stringify(config.clientConfig, null, 1) + ";\n", cb);
 	});
 };
 
-module.exports.getGulpConfig = function() {
-	var masterJsonFile = path.join(__top, 'master.json');
-	var gulpConfig = {};
-	if (fs.existsSync(masterJsonFile)) {
-		var masterConfigString = fs.readFileSync(masterJsonFile);
-		var masterConfig = JSON.parse(masterConfigString);
-		U.extend(gulpConfig, masterConfig.gulpConfig);
-	}
-	return gulpConfig;
-};
 
 

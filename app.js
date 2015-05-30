@@ -1,11 +1,11 @@
 /*jslint node: true */
 /* global __mods */
-/* global __top */
 'use strict';
 
 process.env.TZ = 'UTC';
 
 var fs = require('fs');
+var _ = require('underscore');
 
 process.chdir(__dirname);
 
@@ -19,19 +19,15 @@ var path = require('path');
 global.__top = process.cwd();
 global.__mods = {};
 
-
-
-var masterConfigString = fs.readFileSync(path.join(__top, 'config.json'));
-var masterConfig = JSON.parse(masterConfigString);
-var modules = __mods.masterModules = masterConfig.masterModules;
-
-__mods.config = require('./core/config');
+__mods.config = require("./core/config");
+var config = __mods.config;
 
 // Load all mods
-modules.forEach(function(module) {
-	var filename = path.join(__top, "master_modules", module, "server", "index.js");
+
+_.each(config.masterModules, function(module, moduleName) {
+	var filename = path.join(process.cwd(), module.dir, "server", "index.js");
     if (fs.existsSync(filename)) {
-		__mods[module] = require(filename);
+		__mods[moduleName] = require(filename);
 	}
 });
 
