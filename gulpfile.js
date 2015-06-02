@@ -101,7 +101,7 @@ function writeFileD(filename, data, options, cb) {
 gulp.task('templates', function(cb) {
 	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
 		var module = config.masterModules[moduleName];
-		glob(path.join(module.dir, 'client/**/*.jade'), {realpath:true, ignore: path.join(module.dir, 'client/static/**/*.jade') }, function(err, files) {
+		glob(path.join(module.dir, 'client/**/*.jade'), {realpath:true, ignore: path.join(module.dir, 'client/static/**') }, function(err, files) {
 			if (err) return cb(err);
 			async.each(files, function(f, cb) {
 				watchFiles.templates.push(f);

@@ -207,7 +207,7 @@ module.exports.generateRequiresModule = function(cb) {
 	var output = "";
 	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
 		var module = config.masterModules[moduleName];
-		glob(path.join(module.dir, 'client', '**', '*.js' ), {realpath:true, ignore: path.join(module.dir, 'client', 'static', '**', '*.js' ) }, function(err, files) {
+		glob(path.join(module.dir, 'client', '**', '*.js' ), {realpath:true, ignore: path.join(module.dir, 'client', 'static', '**' ) }, function(err, files) {
 			U.each(files, function(filename) {
 				output += "require(" + quoteString(filename) +");\n";
 			});
