@@ -60,7 +60,10 @@ module.exports.generateBowers = function(cb) {
 module.exports.generateNpmPackages = function(cb) {
 	var mainNpm = {
 		name: "master",
-		dependencies: {}
+		dependencies: {
+			winston: "^0.9.0",
+			nconf: "^0.7.1"
+		}
 	};
 	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
 		var module = config.masterModules[moduleName];
