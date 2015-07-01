@@ -124,7 +124,8 @@ function installService() {
     var svc = new Service({
         name: masterJson.name,
         description: masterJson.description || masterJson.name,
-        script: path.join(process.cwd(), 'app.js' )
+        script: path.join(process.cwd(), 'app.js' ),
+        flags: "--max-old-space-size 2000"
     });
 
     // Listen for the "install" event, which indicates the
