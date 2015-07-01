@@ -125,7 +125,7 @@ function installService() {
         name: masterJson.name,
         description: masterJson.description || masterJson.name,
         script: path.join(process.cwd(), 'app.js' ),
-        flags: "--max-old-space-size 2000"
+        flags: "--max-old-space-size=2000"
     });
 
     // Listen for the "install" event, which indicates the
