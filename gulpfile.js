@@ -198,7 +198,8 @@ gulp.task('build', ['clean'], function (cb) {
 	runSequence(["scripts","templates","index","static", 'bower_components', 'sass', 'translations', 'app'], cb);
 });
 
-gulp.task('watch', ['build'], function() {
+gulp.task('watch', [], function() {
+	console.log(JSON.stringify(watchFiles, null,1));
 	gulp.watch(watchFiles.templates, ['reloadTemplates']);
 	gulp.watch(watchFiles.statics, ['reloadStatic']);
 	gulp.watch(watchFiles.scripts, ['reloadScripts']);
@@ -223,7 +224,44 @@ gulp.task('client', ['build'], function (cb) {
 gulp.task('bower', masterUtils.generateBowers);
 gulp.task('npm', masterUtils.generateNpmPackages);
 gulp.task('indexJade', ['bower'], masterUtils.generateIndexJade);
-gulp.task('requiresModule', masterUtils.generateRequiresModule);
+
+function ensureExists(path, mask, cb) {
+    if (typeof mask == 'function') { // allow the `mask` parameter to be optional
+        cb = mask;
+        mask = '0777';
+    }
+    fs.mkdir(path, mask, function(err) {
+        if (err) {
+            if (err.code == 'EEXIST') cb(null); // ignore the error if the folder already exists
+            else cb(err); // something else went wrong
+        } else cb(null); // successfully created folder
+    });
+}
+
+var quoteString = function(S) {
+		return '"'+S.replace(/(["\s'$`\\])/g,'\\$1')+'"';
+};
+
+
+gulp.task('requiresModule', function(cb) {
+	var output = "";
+	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
+		var module = config.masterModules[moduleName];
+		glob(path.join(process.cwd(), module.dir, 'client', '**', '*.js' ), {realpath:true, ignore: path.join(process.cwd(), module.dir, 'client', 'static', '**' ) }, function(err, files) {
+			U.each(files, function(filename) {
+				watchFiles.scripts.push(filename);
+				output += "require(" + quoteString(filename) +");\n";
+			});
+			cb();
+		});
+	}, function(err) {
+		if (err) return cb(err);
+		ensureExists(path.join(process.cwd(), "tmp"), function(err2) {
+			fs.writeFile(path.join(process.cwd(), "tmp", "modules.js"), output, cb);
+		});
+	});
+});
+
 gulp.task('clientConfigModule', masterUtils.generateClientConfigModule);
 
 gulp.task('app', function() {
