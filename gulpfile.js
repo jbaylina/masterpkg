@@ -26,6 +26,9 @@ var config = require('./core/config.js');
 
 var masterUtils = require('./masterUtils.js');
 
+
+console.log("Version Ricardo Bower");
+
 var watchFiles = {
 	templates: [],
 	indexes: [],

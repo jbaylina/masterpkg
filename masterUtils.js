@@ -36,6 +36,7 @@ module.exports.generateBowers = function(cb) {
 					var mBowerConfig = {
 						name: bModuleName,
 						dependencies: mMasterConfig.bowerDependencies,
+						resolutions: mMasterConfig.bowerResolutions,
 						ignore: ["*", "!bower.json"]
 					};
 					fs.writeFile(path.join(module.dir, "bower.json"), JSON.stringify(mBowerConfig, null, 1), cb);
@@ -49,7 +50,7 @@ module.exports.generateBowers = function(cb) {
 		if (err) return (err);
 		fs.writeFile(path.join(process.cwd(), "bower.json"), JSON.stringify(mainBower, null, 1), function(err) {
 			if (err) return err;
-			bower.commands.install().on('end', function(results) {
+			bower.commands.install(null,{force: true}).on('end', function(results) {
 				cb();
 			});
 		});
