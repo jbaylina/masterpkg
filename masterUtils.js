@@ -50,7 +50,7 @@ module.exports.generateBowers = function(cb) {
 		if (err) return (err);
 		fs.writeFile(path.join(process.cwd(), "bower.json"), JSON.stringify(mainBower, null, 1), function(err) {
 			if (err) return err;
-			bower.commands.install(null,{force: true}).on('end', function(results) {
+			bower.commands.update().on('end', function(results) {
 				cb();
 			});
 		});
