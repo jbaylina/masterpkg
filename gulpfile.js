@@ -198,7 +198,7 @@ gulp.task('clean', function (cb) {
 });
 
 gulp.task('build', ['clean'], function (cb) {
-	runSequence(["scripts","templates","index","static", 'bower_components', 'sass', 'translations', 'app'], cb);
+	runSequence(['npm', "scripts","templates","index","static", 'bower_components', 'sass', 'translations', 'app'], cb);
 });
 
 gulp.task('watch', [], function() {

@@ -112,8 +112,7 @@ module.exports.generateNpmPackages = function(cb) {
 				  // use the npm object, now that it's loaded.
 				  //
 				  if (err) return cb(err);
-
-				  npm.commands.install([], cb);
+				  npm.commands.update(cb);
 				});
 			});
 		});
