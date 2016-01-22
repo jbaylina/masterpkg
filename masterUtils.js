@@ -47,11 +47,21 @@ module.exports.generateBowers = function(cb) {
 		});
 
 	}, function(err) {
-		if (err) return (err);
+		if (err) {
+			return cb(err);
+		}
 		fs.writeFile(path.join(process.cwd(), "bower.json"), JSON.stringify(mainBower, null, 1), function(err) {
-			if (err) return err;
+			if (err) {
+				console.error(err);
+				return cb(err);
+			}
 			bower.commands.update().on('end', function(results) {
 				cb();
+			}).on('error', function(err) {
+				return cb(err);
+			}).on('prompt', function(prompts, callback) {
+				var err = new Error("Bower prompts event: " + prompts);
+				return cb(err);
 			});
 		});
 	});
