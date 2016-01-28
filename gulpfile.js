@@ -19,6 +19,7 @@ var fs = require('fs');
 var glob = require("glob");
 var jade = require('jade');
 var mkdirp = require('mkdirp');
+var git = require('gulp-git');
 
 var browserify = require('browserify');
 
@@ -79,6 +80,105 @@ gulp.task('scripts', ['requiresModule', 'clientConfigModule'], function(cb) {
 
 gulp.task('reloadScripts', ['scripts'], function() {
 	return connect.reload();
+});
+
+gulp.task('masterLibs', function(cb) {
+
+	if(!U.isEmpty(config.masterLibs)){
+
+        var dir = __dirname + '/master_libs';
+
+        async.waterfall([
+            function(callback) {
+                // CREACIO DEL DIRECTORI MASTER_LIBS
+                fs.access(dir, fs.R_OK | fs.W_OK, function (err) {
+                    if(err){
+                        if(err.code == 'ENOENT'){
+                            fs.mkdir(dir, 484, function(err){
+                                if (err) callback(err);
+                                callback(null);
+                            });
+                        }else{
+                            if (err) callback(err);
+                        }
+                    }else{
+                        callback(null);
+                    }
+                });
+            }
+        ], function (err, result) {
+            if (err) return cb(err);
+            async.each(config.masterLibs, function (module, cb) {
+                var moduleDir = dir+'/'+module.name;
+                async.waterfall([
+                    function(callback) {
+                        // TINC ACCES AL DIRECTORI
+                        fs.access(moduleDir, fs.R_OK | fs.W_OK, function (err) {
+                            if(err){
+                                if(err.code == 'ENOENT'){
+                                    // NO TINC ACCES PK NO EXISTEIX
+                                    fs.mkdir(moduleDir, 484, function(err){
+                                        if (err) callback(err);
+                                        // CARPETA CREADA
+                                        callback(null);
+                                    });
+                                }else{
+                                    // NO HI TINC ACCESS
+                                    if (err) callback(err);
+                                }
+                            }else{
+                                // YA EXISTEIX EL DIRECTORI
+                                callback(null);
+                            }
+                        });
+                    },
+                    function(callback) {
+                        // MIRO SI HI HAN ARXIUS
+                        fs.readdir(moduleDir, function(err, files) {
+                            if (err) callback(err);
+                            if(!files.length) {
+                                // NO HI HAN ARXIUS, CLONO
+                                git.clone(module.git, {args: moduleDir}, function(err) {
+                                    if (err) callback(err);
+                                    callback(null);
+                                });
+                            }else{
+                                // YA HI HAN ARXIUS
+                                callback(null);
+                            }
+                        });
+                    },
+                    function(callback) {
+                        // FER CHECKOUT
+                        // TODO AIXO ES CORRECTA?
+                        /*
+                        git.fetch('', '', {args: '--all'}, function (err) {
+                            if (err) callback(err);
+                            git.checkout('branchName', function (err) {
+                                if (err) callback(err);
+                                callback(null);
+                            });
+                        });
+                        */
+                        callback(null);
+                    },
+                    function(callback){
+                        // modifico el tag
+                        if(module.tag){
+                            git.tag('v'+module.tag, 'Version '+module.tag, function (err) {
+                                if (err) return callback(err);
+                                callback(null);
+                            });
+                        }
+                    }
+                ], function (err, result) {
+                    // TODO COM FAIG STOP!!
+                    if (err) return cb(err);
+                    return true;
+                });
+            });
+        });
+	}
 });
 
 function getTopPath(p) {

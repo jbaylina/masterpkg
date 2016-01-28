@@ -12,6 +12,7 @@ nconf.env().argv();
 
 // Read the defaults for all modules.
 var defaults={
+	masterLibs: {},
 	masterModules: {},
 	clientConfig: {},
 	gulpConfig: {}
@@ -30,6 +31,19 @@ if  (fs.existsSync(path.join(top, 'config.json'))) {
 	buff = fs.readFileSync(path.join(top, 'config.json'));
 	configJson = JSON.parse(buff);
 }
+
+if (typeof masterJson.masterLibs === "object") {
+	U.extend(defaults.masterLibs,masterJson.masterLibs);
+}
+
+if (typeof configJson.masterLibs === "object") {
+	U.extend(defaults.masterLibs,configJson.masterLibs);
+}
+U.each(defaults.masterLibs, function (module, moduleName) {
+	defaults.masterLibs[moduleName] = defaults.masterLibs[moduleName];
+	defaults.masterLibs[moduleName].name = moduleName;
+	module = defaults.masterLibs[moduleName];
+});
 
 if (typeof masterJson.masterModules === "object") {
 	U.extend(defaults.masterModules,masterJson.masterModules);
