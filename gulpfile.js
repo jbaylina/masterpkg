@@ -90,7 +90,7 @@ gulp.task('masterLibs', function(cb) {
 
         async.waterfall([
             function(callback) {
-                // CREACIO DEL DIRECTORI MASTER_LIBS
+                /* CREACIO DEL DIRECTORI MASTER_LIBS */
                 fs.access(dir, fs.R_OK | fs.W_OK, function (err) {
                     if(err){
                         if(err.code == 'ENOENT'){
@@ -112,58 +112,55 @@ gulp.task('masterLibs', function(cb) {
                 var moduleDir = dir+'/'+module.name;
                 async.waterfall([
                     function(callback) {
-                        // TINC ACCES AL DIRECTORI
+                        /* TINC ACCES AL DIRECTORI */
                         fs.access(moduleDir, fs.R_OK | fs.W_OK, function (err) {
                             if(err){
                                 if(err.code == 'ENOENT'){
-                                    // NO TINC ACCES PK NO EXISTEIX
+                                    /* NO TINC ACCES PK NO EXISTEIX */
                                     fs.mkdir(moduleDir, 484, function(err){
                                         if (err) callback(err);
-                                        // CARPETA CREADA
+                                        /* CARPETA CREADA */
                                         callback(null);
                                     });
                                 }else{
-                                    // NO HI TINC ACCESS
+                                    /* NO HI TINC ACCESS */
                                     if (err) callback(err);
                                 }
                             }else{
-                                // YA EXISTEIX EL DIRECTORI
+                                /* YA EXISTEIX EL DIRECTORI */
                                 callback(null);
                             }
                         });
                     },
                     function(callback) {
-                        // MIRO SI HI HAN ARXIUS
+                        /* MIRO SI HI HAN ARXIUS */
                         fs.readdir(moduleDir, function(err, files) {
                             if (err) callback(err);
                             if(!files.length) {
-                                // NO HI HAN ARXIUS, CLONO
+                                /* NO HI HAN ARXIUS, CLONO */
                                 git.clone(module.git, {args: moduleDir}, function(err) {
                                     if (err) callback(err);
                                     callback(null);
                                 });
                             }else{
-                                // YA HI HAN ARXIUS
+                                /* YA HI HAN ARXIUS */
                                 callback(null);
                             }
                         });
                     },
                     function(callback) {
-                        // FER CHECKOUT
-                        // TODO AIXO ES CORRECTA?
-                        /*
-                        git.fetch('', '', {args: '--all'}, function (err) {
+                        /* FER CHECKOUT */
+						var options = {args: '--all', cwd: moduleDir};
+                        git.fetch('', '', options, function (err) {
                             if (err) callback(err);
-                            git.checkout('branchName', function (err) {
+							git.checkout('master', options, function (err) {
                                 if (err) callback(err);
                                 callback(null);
                             });
                         });
-                        */
-                        callback(null);
                     },
                     function(callback){
-                        // modifico el tag
+                        /* modifico el tag */
                         if(module.tag){
                             git.tag('v'+module.tag, 'Version '+module.tag, function (err) {
                                 if (err) return callback(err);
@@ -172,7 +169,7 @@ gulp.task('masterLibs', function(cb) {
                         }
                     }
                 ], function (err, result) {
-                    // TODO COM FAIG STOP!!
+                    // TODO COM FAIG STOP?
                     if (err) return cb(err);
                     return true;
                 });
