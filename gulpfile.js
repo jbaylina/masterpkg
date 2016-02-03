@@ -27,9 +27,6 @@ var config = require('./core/config.js');
 
 var masterUtils = require('./masterUtils.js');
 
-
-console.log("Version Ricardo Bower");
-
 var watchFiles = {
 	templates: [],
 	indexes: [],
@@ -118,13 +115,13 @@ gulp.task('masterLibs', function(cb) {
                                 if(err.code == 'ENOENT'){
                                     /* NO TINC ACCES PK NO EXISTEIX */
                                     fs.mkdir(moduleDir, 484, function(err){
-                                        if (err) callback(err);
+                                        if (err) return callback(err);
                                         /* CARPETA CREADA */
                                         callback(null);
                                     });
                                 }else{
                                     /* NO HI TINC ACCESS */
-                                    if (err) callback(err);
+                                    if (err) return callback(err);
                                 }
                             }else{
                                 /* YA EXISTEIX EL DIRECTORI */
@@ -135,11 +132,11 @@ gulp.task('masterLibs', function(cb) {
                     function(callback) {
                         /* MIRO SI HI HAN ARXIUS */
                         fs.readdir(moduleDir, function(err, files) {
-                            if (err) callback(err);
+                            if (err) return callback(err);
                             if(!files.length) {
                                 /* NO HI HAN ARXIUS, CLONO */
-                                git.clone(module.git, {args: moduleDir}, function(err) {
-                                    if (err) callback(err);
+                                git.clone(module.git, {args: moduleDir, quiet: true}, function(err) {
+                                    if (err) return callback(err);
                                     callback(null);
                                 });
                             }else{
@@ -150,31 +147,35 @@ gulp.task('masterLibs', function(cb) {
                     },
                     function(callback) {
                         /* FER CHECKOUT */
-						var options = {args: '--all', cwd: moduleDir};
+						var options = {args: '--all', cwd: moduleDir, quiet: true};
                         git.fetch('', '', options, function (err) {
-                            if (err) callback(err);
-							git.checkout('master', options, function (err) {
-                                if (err) callback(err);
-                                callback(null);
-                            });
+                            if (err) return callback(err);
+							callback(null);
                         });
                     },
                     function(callback){
                         /* modifico el tag */
+						var options = {cwd: moduleDir, quiet: true};
                         if(module.tag){
-                            git.tag('v'+module.tag, 'Version '+module.tag, function (err) {
-                                if (err) return callback(err);
-                                callback(null);
-                            });
-                        }
+							git.checkout(module.tag, options, function (err) {
+								if (err) callback(err);
+								callback(null);
+							});
+                        }else{
+							git.checkout('master', options, function (err) {
+								if (err) callback(err);
+								callback(null);
+							});
+						}
                     }
                 ], function (err, result) {
-                    // TODO COM FAIG STOP?
                     if (err) return cb(err);
-                    return true;
+                    cb();
                 });
-            });
+            }, cb);
         });
+	}else{
+		return cb();
 	}
 });
 
