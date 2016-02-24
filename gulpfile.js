@@ -84,6 +84,7 @@ gulp.task('masterLibs', function(cb) {
 	if(!U.isEmpty(config.masterLibs)){
 
         var dir = __dirname + '/master_libs';
+		var quiet = false;
 
         async.waterfall([
             function(callback) {
@@ -135,7 +136,7 @@ gulp.task('masterLibs', function(cb) {
                             if (err) return callback(err);
                             if(!files.length) {
                                 /* NO HI HAN ARXIUS, CLONO */
-                                git.clone(module.git, {args: moduleDir, quiet: true}, function(err) {
+                                git.clone(module.git, {args: moduleDir, quiet: quiet}, function(err) {
                                     if (err) return callback(err);
                                     callback(null);
                                 });
@@ -147,7 +148,7 @@ gulp.task('masterLibs', function(cb) {
                     },
                     function(callback) {
                         /* FER CHECKOUT */
-						var options = {args: '--all', cwd: moduleDir, quiet: true};
+						var options = {args: '--all', cwd: moduleDir, quiet: quiet};
                         git.fetch('', '', options, function (err) {
                             if (err) return callback(err);
 							callback(null);
@@ -155,7 +156,7 @@ gulp.task('masterLibs', function(cb) {
                     },
                     function(callback){
                         /* modifico el tag */
-						var options = {cwd: moduleDir, quiet: true};
+						var options = {cwd: moduleDir, quiet: quiet};
                         if(module.tag){
 							git.checkout(module.tag, options, function (err) {
 								if (err) callback(err);
