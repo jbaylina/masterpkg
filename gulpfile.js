@@ -393,15 +393,18 @@ gulp.task('test-client-dev', function(cb) {
 	}, cb);
 });
 gulp.task('test-server', function(cb) {
-	runMocha(cb);
+	runMocha();
+	cb();
 });
 
 gulp.task('test', ['test-server', 'test-client']);
 gulp.task('test-dev', ['test-server', 'test-client-dev']);
 
-function runMocha(cb){
+function runMocha(){
 	return gulp.src(['**/common/*.spec.js', '**/server/*.spec.js'], {read: false})
-		.pipe(mocha({reporter: 'nyan'}));
+		.pipe(mocha({
+			reporter: 'spec'/*'nyan'*/
+		}));
 }
 
 function runKarma(configFilePath, options, cb) {
