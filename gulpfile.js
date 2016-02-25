@@ -22,6 +22,7 @@ var mkdirp = require('mkdirp');
 var git = require('gulp-git');
 var karmaServer = require('karma').Server;
 var karmaParseConfig = require('karma/lib/config').parseConfig;
+var mocha = require('gulp-mocha');
 
 var browserify = require('browserify');
 
@@ -108,7 +109,7 @@ gulp.task('masterLibs', function(cb) {
             }
         ], function (err, result) {
             if (err) return cb(err);
-            async.each(config.masterLibs, function (module, cb) {
+            async.each(config.masterLibsreadline, function (module, cb) {
                 var moduleDir = dir+'/'+module.name;
                 async.waterfall([
                     function(callback) {
@@ -379,21 +380,29 @@ gulp.task('default', ['build'], function (cb) {
 	runSequence('monitorServer', 'watch', cb);
 });
 
-/** single run test */
-gulp.task('test', function(cb) {
+gulp.task('test-client', function(cb) {
 	runKarma('karma.conf.js', {
 		autoWatch: false,
 		singleRun: true
 	}, cb);
 });
-
-/** continuous test */
-gulp.task('test-dev', function(cb) {
+gulp.task('test-client-dev', function(cb) {
 	runKarma('karma.conf.js', {
 		autoWatch: true,
 		singleRun: false
 	}, cb);
 });
+gulp.task('test-server', function(cb) {
+	runMocha(cb);
+});
+
+gulp.task('test', ['test-server', 'test-client']);
+gulp.task('test-dev', ['test-server', 'test-client-dev']);
+
+function runMocha(cb){
+	return gulp.src(['**/common/*.spec.js', '**/server/*.spec.js'], {read: false})
+		.pipe(mocha({reporter: 'nyan'}));
+}
 
 function runKarma(configFilePath, options, cb) {
 
@@ -417,3 +426,4 @@ function runKarma(configFilePath, options, cb) {
 		}
 	}
 }
+

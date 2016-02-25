@@ -8,7 +8,7 @@
   },
   "author": "Jordi Baylina",
   "license": "MIT",
- "dependencies": {
+  "dependencies": {
     "async": "^1.5.0",
     "bower": "^1.6.8",
     "browserify": "^12.0.1",
@@ -43,7 +43,8 @@
     "karma-chai": "0.1.0",
     "karma-browserify": "5.0.2",
     "requirejs": "2.1.22",
-    "karma-requirejs": "0.2.5"
+    "karma-requirejs": "0.2.5",
+    "gulp-mocha": "^2.2.0"
   },
   "optionalDependencies": {
     "node-windows": "^0.1.7"
@@ -54,5 +55,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/jbaylina/master.git"
+  },
+  "devDependencies": {
   }
 }
