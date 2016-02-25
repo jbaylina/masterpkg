@@ -34,7 +34,14 @@
     "run-sequence": "^1.1.4",
     "underscore": "^1.8.3",
     "winston": "^0.9.0",
-    "karma": "^0.13.21"
+    "karma": "^0.13.21",
+    "watchify": "3.7.0",
+    "mocha": "2.4.5",
+    "chai": "3.5.0",
+    "karma-firefox-launcher": "0.1.7",
+    "karma-mocha": "0.2.2",
+    "karma-chai": "0.1.0",
+    "karma-browserify": "5.0.2"
   },
   "optionalDependencies": {
     "node-windows": "^0.1.7"
