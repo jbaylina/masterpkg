@@ -351,7 +351,7 @@ gulp.task('requiresModule', function(cb) {
 	var output = "";
 	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
 		var module = config.masterModules[moduleName];
-		glob(path.join(process.cwd(), module.dir, 'client', '**', '*.js' ), {realpath:true, ignore: path.join(process.cwd(), module.dir, 'client', 'static', '**' ) }, function(err, files) {
+		glob(path.join(process.cwd(), module.dir, 'client', '**', '*.js' ), {realpath:true, ignore: [path.join(process.cwd(), module.dir, 'client', 'static', '**' ), path.join(process.cwd(), module.dir, 'client', '**', '*.spec.js' )] }, function(err, files) {
 			U.each(files, function(filename) {
 				watchFiles.scripts.push(filename);
 				output += "require(" + quoteString(filename) +");\n";
@@ -379,3 +379,41 @@ gulp.task('default', ['build'], function (cb) {
 	runSequence('monitorServer', 'watch', cb);
 });
 
+/** single run test */
+gulp.task('test', function(cb) {
+	runKarma('karma.conf.js', {
+		autoWatch: false,
+		singleRun: true
+	}, cb);
+});
+
+/** continuous test */
+gulp.task('test-dev', function(cb) {
+	runKarma('karma.conf.js', {
+		autoWatch: true,
+		singleRun: false
+	}, cb);
+});
+
+function runKarma(configFilePath, options, cb) {
+
+	configFilePath = path.resolve(configFilePath);
+
+	var config = karmaParseConfig(configFilePath, {});
+
+	Object.keys(options).forEach(function(key) {
+		config[key] = options[key];
+	});
+
+	karmaServer = new karmaServer(config, karmaCompleted);
+	karmaServer.start();
+
+	function karmaCompleted(karmaResult) {
+		// console.log('Karma completed');
+		if (karmaResult === 1) {
+			cb('karma: tests failed with code ' + karmaResult);
+		} else {
+			cb();
+		}
+	}
+}
