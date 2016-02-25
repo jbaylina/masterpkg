@@ -396,9 +396,12 @@ gulp.task('test-server', function(cb) {
 	runMocha();
 	cb();
 });
-
-gulp.task('test', ['test-server', 'test-client']);
-gulp.task('test-dev', ['test-server', 'test-client-dev']);
+gulp.task('test', function(cb){
+	runSequence(['test-server', 'test-client'], cb);
+});
+gulp.task('test-dev', function(cb){
+	runSequence(['test-server', 'test-client-dev'], cb);
+});
 
 function runMocha(){
 	return gulp.src(['**/common/*.spec.js', '**/server/*.spec.js'], {read: false})
