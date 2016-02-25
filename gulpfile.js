@@ -20,6 +20,8 @@ var glob = require("glob");
 var jade = require('jade');
 var mkdirp = require('mkdirp');
 var git = require('gulp-git');
+var karmaServer = require('karma').Server;
+var karmaParseConfig = require('karma/lib/config').parseConfig;
 
 var browserify = require('browserify');
 
