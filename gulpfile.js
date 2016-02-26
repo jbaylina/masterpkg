@@ -402,17 +402,13 @@ gulp.task('default', ['build'], function (cb) {
 });
 
 gulp.task('test-client', function(cb) {
-	defaultKarma.push({
-		autoWatch: false,
-		singleRun: true
-	});
+	defaultKarma.autoWatch = false;
+	defaultKarma.singleRun = true;
 	return runKarma('karma.conf.js', defaultKarma, cb);
 });
 gulp.task('test-client-dev', function(cb) {
-	defaultKarma.push({
-		autoWatch: true,
-		singleRun: false
-	});
+	defaultKarma.autoWatch = true;
+	defaultKarma.singleRun = false;
 	return runKarma('karma.conf.js', defaultKarma, cb);
 });
 gulp.task('test-server', function() {
@@ -435,23 +431,46 @@ function runMocha(){
 function runKarma(configFilePath, options, cb) {
 
 	configFilePath = path.resolve(configFilePath);
+	var noFile = false;
+	async.series([
+		function(){
+			fs.stat(configFilePath, function(err, stats) {
+				if (err){
+					noFile = true;
+				}
+			});
+		},
+		function(){
+			if(!noFile){
+				var config = karmaParseConfig(configFilePath, {});
+			}else{
+				var config = {
+					browsers: ['Firefox'],
+					files: [
+						"bower_components/**/*.js",
+						'dist/app.js',
+						'**/*.spec.js'
+					]
+				};
+			}
 
-	var config = karmaParseConfig(configFilePath, {});
+			Object.keys(options).forEach(function(key) {
+				config[key] = options[key];
+			});
 
-	Object.keys(options).forEach(function(key) {
-		config[key] = options[key];
-	});
+			karmaServer = new karmaServer(config, karmaCompleted);
+			karmaServer.start();
 
-	karmaServer = new karmaServer(config, karmaCompleted);
-	karmaServer.start();
-
-	function karmaCompleted(karmaResult) {
-		// console.log('Karma completed');
-		if (karmaResult === 1) {
-			cb('karma: tests failed with code ' + karmaResult);
-		} else {
-			cb();
+			function karmaCompleted(karmaResult) {
+				// console.log('Karma completed');
+				if (karmaResult === 1) {
+					cb('karma: tests failed with code ' + karmaResult);
+				} else {
+					cb();
+				}
+			}
 		}
-	}
+	]);
+
 }
 
