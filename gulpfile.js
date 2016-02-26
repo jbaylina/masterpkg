@@ -441,18 +441,22 @@ function runKarma(configFilePath, options, cb) {
 			});
 		},
 		function(callback){
-			if(!noFile){
-				var config = karmaParseConfig(configFilePath, {});
-			}else{
-				var config = {
-					browsers: ['Firefox'],
-					files: [
-						"bower_components/**/*.js",
-						'dist/app.js',
-						'**/client/**/*.spec.js'
-					]
-				};
+			if(!noFile) {
+				return callback();
 			}
+			/*
+			 else{
+			 var config = {
+			 browsers: ['Firefox'],
+			 files: [
+			 "bower_components/** /*.js",
+			 'dist/app.js',
+			 '** /client/** /*.spec.js'
+			 ]
+			 };
+			 }
+			 */
+			var config = karmaParseConfig(configFilePath, {});
 
 			Object.keys(options).forEach(function(key) {
 				config[key] = options[key];
@@ -463,9 +467,9 @@ function runKarma(configFilePath, options, cb) {
 
 			function karmaCompleted(karmaResult) {
 				if (karmaResult === 1) {
-					callback('karma: tests failed with code ' + karmaResult);
+					return callback('karma: tests failed with code ' + karmaResult);
 				} else {
-					callback();
+					return callback();
 				}
 			}
 		}
