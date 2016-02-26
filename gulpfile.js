@@ -38,6 +38,27 @@ var watchFiles = {
 	sass: []
 };
 
+var defaultKarma = {
+	frameworks: ['mocha', 'chai','browserify'],
+	basePath: './',
+	browserify: {
+		watch: true,
+		debug: true
+	},
+	preprocessors: {
+		'app.js': ['browserify']
+	},
+	reporters: ['mocha'],
+	plugins: [
+		'karma-mocha-reporter',
+		'karma-firefox-launcher',
+		'karma-mocha',
+		'karma-chai',
+		'karma-browserify',
+		'karma-requirejs'
+	]
+};
+
 gulp.task('sass', function(cb) {
 	var buff = "";
 	async.each(Object.keys(config.masterModules), function(moduleName, cb) {
@@ -381,32 +402,18 @@ gulp.task('default', ['build'], function (cb) {
 });
 
 gulp.task('test-client', function(cb) {
-	return runKarma('karma.conf.js', {
+	defaultKarma.push({
 		autoWatch: false,
-		singleRun: true,
-		plugins: [
-			'karma-mocha-reporter',
-			'karma-firefox-launcher',
-			'karma-mocha',
-			'karma-chai',
-			'karma-browserify',
-			'karma-requirejs'
-		]
-	}, cb);
+		singleRun: true
+	});
+	return runKarma('karma.conf.js', defaultKarma, cb);
 });
 gulp.task('test-client-dev', function(cb) {
-	return runKarma('karma.conf.js', {
+	defaultKarma.push({
 		autoWatch: true,
-		singleRun: false,
-		plugins: [
-			'karma-mocha-reporter',
-			'karma-firefox-launcher',
-			'karma-mocha',
-			'karma-chai',
-			'karma-browserify',
-			'karma-requirejs'
-		]
-	}, cb);
+		singleRun: false
+	});
+	return runKarma('karma.conf.js', defaultKarma, cb);
 });
 gulp.task('test-server', function() {
 	return runMocha();
