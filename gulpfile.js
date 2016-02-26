@@ -381,20 +381,35 @@ gulp.task('default', ['build'], function (cb) {
 });
 
 gulp.task('test-client', function(cb) {
-	runKarma('karma.conf.js', {
+	return runKarma('karma.conf.js', {
 		autoWatch: false,
-		singleRun: true
+		singleRun: true,
+		plugins: [
+			'karma-mocha-reporter',
+			'karma-firefox-launcher',
+			'karma-mocha',
+			'karma-chai',
+			'karma-browserify',
+			'karma-requirejs'
+		]
 	}, cb);
 });
 gulp.task('test-client-dev', function(cb) {
-	runKarma('karma.conf.js', {
+	return runKarma('karma.conf.js', {
 		autoWatch: true,
-		singleRun: false
+		singleRun: false,
+		plugins: [
+			'karma-mocha-reporter',
+			'karma-firefox-launcher',
+			'karma-mocha',
+			'karma-chai',
+			'karma-browserify',
+			'karma-requirejs'
+		]
 	}, cb);
 });
-gulp.task('test-server', function(cb) {
-	runMocha();
-	cb();
+gulp.task('test-server', function() {
+	return runMocha();
 });
 gulp.task('test', function(cb){
 	runSequence(['test-server', 'test-client'], cb);

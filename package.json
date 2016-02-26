@@ -44,7 +44,8 @@
     "karma-browserify": "5.0.2",
     "requirejs": "2.1.22",
     "karma-requirejs": "0.2.5",
-    "gulp-mocha": "^2.2.0"
+    "gulp-mocha": "^2.2.0",
+    "karma-mocha-reporter": "^1.2.2"
   },
   "optionalDependencies": {
     "node-windows": "^0.1.7"
