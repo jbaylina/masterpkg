@@ -441,19 +441,19 @@ function runKarma(configFilePath, options, cb) {
 			});
 		},
 		function(callback){
-			if(!noFile) {
+			if(noFile) {
 				return callback();
 			}
 			/*
 			 else{
-			 var config = {
-			 browsers: ['Firefox'],
-			 files: [
-			 "bower_components/** /*.js",
-			 'dist/app.js',
-			 '** /client/** /*.spec.js'
-			 ]
-			 };
+			 	var config = {
+			 		browsers: ['Firefox'],
+			 		files: [
+			 			"bower_components/** /*.js",
+			 			'dist/app.js',
+			 			'** /client/** /*.spec.js'
+			 		]
+			 	};
 			 }
 			 */
 			var config = karmaParseConfig(configFilePath, {});
