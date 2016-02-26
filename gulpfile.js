@@ -429,18 +429,18 @@ function runMocha(){
 }
 
 function runKarma(configFilePath, options, cb) {
-	console.log('RUN KARMA');
 	configFilePath = path.resolve(configFilePath);
 	var noFile = false;
 	async.series([
-		function(){
+		function(callback){
 			fs.stat(configFilePath, function(err, stats) {
 				if (err){
 					noFile = true;
 				}
+				callback();
 			});
 		},
-		function(){
+		function(callback){
 			if(!noFile){
 				var config = karmaParseConfig(configFilePath, {});
 			}else{
@@ -449,11 +449,10 @@ function runKarma(configFilePath, options, cb) {
 					files: [
 						"bower_components/**/*.js",
 						'dist/app.js',
-						'**/*.spec.js'
+						'**/client/**/*.spec.js'
 					]
 				};
 			}
-			console.log(config);
 
 			Object.keys(options).forEach(function(key) {
 				config[key] = options[key];
@@ -463,13 +462,15 @@ function runKarma(configFilePath, options, cb) {
 			karmaServer.start();
 
 			function karmaCompleted(karmaResult) {
-				console.log('Karma completed');
 				if (karmaResult === 1) {
-					cb('karma: tests failed with code ' + karmaResult);
+					callback('karma: tests failed with code ' + karmaResult);
 				} else {
-					cb();
+					callback();
 				}
 			}
 		}
-	]);
+	], function(err, results){
+		if(err){ return cb(err);}
+		return cb();
+	});
 }
