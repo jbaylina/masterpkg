@@ -130,7 +130,7 @@ gulp.task('masterLibs', function(cb) {
             }
         ], function (err, result) {
             if (err) return cb(err);
-            async.each(config.masterLibsreadline, function (module, cb) {
+            async.each(config.masterLibs, function (module, cb) {
                 var moduleDir = dir+'/'+module.name;
                 async.waterfall([
                     function(callback) {
@@ -420,8 +420,8 @@ gulp.task('test-client-dev', function(cb) {
 	defaultKarma.singleRun = false;
 	return runKarma('karma.conf.js', defaultKarma, cb);
 });
-gulp.task('test-server', function() {
-	return runMocha();
+gulp.task('test-server', function(cb) {
+	return runMocha(cb);
 });
 gulp.task('test', function(cb){
 	runSequence(['test-server', 'test-client'], cb);
@@ -430,11 +430,26 @@ gulp.task('test-dev', function(cb){
 	runSequence(['test-server', 'test-client-dev'], cb);
 });
 
-function runMocha(){
-	return gulp.src(['**/common/*.spec.js', '**/server/*.spec.js'], {read: false})
-		.pipe(mocha({
-			reporter: 'spec'/*'nyan'*/
-		}));
+function runMocha(cb){
+	async.series([
+		function(callback) {
+			gulp
+				.src(['**/common/*.spec.js', '**/server/*.spec.js'], {read: false})
+				.pipe(mocha({
+					reporter: 'spec'/*'nyan'*/
+				}))
+				.once('error', function () {
+					return callback();
+				})
+				.once('end', function () {
+					return callback();
+				});
+		}],
+		function(err, results){
+			if(err){ return cb(err);}
+			return cb();
+		}
+	);
 }
 
 function runKarma(configFilePath, options, cb) {
