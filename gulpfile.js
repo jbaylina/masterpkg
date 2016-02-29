@@ -10,7 +10,7 @@ var sass   = require('node-sass');
 var concat = require('gulp-concat');
 var gettext = require('gulp-angular-gettext');
 var shell = require('gulp-shell');
-var historyApiFallback = require('connect-history-api-fallback');
+var modRewrite = require('connect-modrewrite');
 var async = require('async');
 var path = require('path');
 var U = require('underscore');
@@ -334,12 +334,21 @@ gulp.task('watch', [], function() {
 
 gulp.task('monitorServer', function () {
   connect.server({
-    root: './dist',
+    root: 'dist',
     port: 3001,
     livereload: true,
+    fallback: "dist/index.html",
+    middleware: function() {
+      return [
+        modRewrite([
+          '^/api/(.*)$ http://localhost:3000/api/$1 [P]'
+        ])
+      ];
+    }
+  /*  ,
     middleware: function(connect, opt) {
       return [ historyApiFallback ];
-    }
+    } */
   });
 });
 

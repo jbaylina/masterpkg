@@ -1,6 +1,6 @@
 {
   "name": "masterpkg",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Utilities to manage master framework.",
   "main": "master.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "async": "^1.5.0",
     "bower": "^1.6.8",
     "browserify": "^12.0.1",
+    "chai": "3.5.0",
     "chalk": "^1.1.1",
     "connect-history-api-fallback": "^1.1.0",
     "glob": "^6.0.1",
@@ -19,33 +20,32 @@
     "gulp-angular-gettext": "^2.1.0",
     "gulp-concat": "^2.6.0",
     "gulp-connect": "^2.2.0",
+    "gulp-git": "^1.7.0",
+    "gulp-mocha": "^2.2.0",
     "gulp-rename": "^1.2.2",
     "gulp-shell": "^0.5.1",
     "gulp-util": "^3.0.7",
-    "gulp-git": "^1.6.1",
     "jade": "^1.11.0",
+    "karma": "^0.13.21",
+    "karma-browserify": "5.0.2",
+    "karma-chai": "0.1.0",
+    "karma-firefox-launcher": "0.1.7",
+    "karma-mocha": "0.2.2",
+    "karma-mocha-reporter": "^1.2.2",
+    "karma-requirejs": "0.2.5",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
+    "mocha": "2.4.5",
     "nconf": "^0.7.1",
     "node-sass": "^3.4.2",
     "npm": "^3.4.1",
     "pretty-hrtime": "^1.0.1",
+    "requirejs": "2.1.22",
     "rimraf": "^2.4.4",
     "run-sequence": "^1.1.4",
     "underscore": "^1.8.3",
-    "winston": "^0.9.0",
-    "karma": "^0.13.21",
     "watchify": "3.7.0",
-    "mocha": "2.4.5",
-    "chai": "3.5.0",
-    "karma-firefox-launcher": "0.1.7",
-    "karma-mocha": "0.2.2",
-    "karma-chai": "0.1.0",
-    "karma-browserify": "5.0.2",
-    "requirejs": "2.1.22",
-    "karma-requirejs": "0.2.5",
-    "gulp-mocha": "^2.2.0",
-    "karma-mocha-reporter": "^1.2.2"
+    "winston": "^0.9.0"
   },
   "optionalDependencies": {
     "node-windows": "^0.1.7"
@@ -57,6 +57,5 @@
     "type": "git",
     "url": "https://github.com/jbaylina/master.git"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
