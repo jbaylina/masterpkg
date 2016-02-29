@@ -107,7 +107,7 @@ gulp.task('masterLibs', function(cb) {
 
 	if(!U.isEmpty(config.masterLibs)){
 
-        var dir = __dirname + '/master_libs';
+        var dir = 'master_libs';
 		var quiet = false;
 
         async.waterfall([
