@@ -130,7 +130,7 @@ gulp.task('masterLibs', function(cb) {
             }
         ], function (err, result) {
             if (err) return cb(err);
-            async.each(config.masterLibsreadline, function (module, cb) {
+            async.each(config.masterLibs, function (module, cb) {
                 var moduleDir = dir+'/'+module.name;
                 async.waterfall([
                     function(callback) {
