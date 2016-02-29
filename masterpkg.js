@@ -42,6 +42,8 @@ if (argv._.length === 0 ) {
         if (err) {
             console.log(err.stack);
             process.exit(1);
+        } else {
+            process.exit(0);
         }
     });
 }
