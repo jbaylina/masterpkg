@@ -27,3 +27,4 @@ master_libs
 
 # Users Environment Variables
 .lock-wscript
+.idea

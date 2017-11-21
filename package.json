@@ -1,6 +1,6 @@
 {
   "name": "masterpkg",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "Utilities to manage master framework.",
   "main": "master.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "gulp-angular-gettext": "^2.1.0",
     "gulp-concat": "^2.6.0",
     "gulp-connect": "^2.2.0",
-    "gulp-git": "^1.7.0",
+    "gulp-git": "^2.4.2",
     "gulp-mocha": "^2.2.0",
     "gulp-rename": "^1.2.2",
     "gulp-shell": "^0.5.1",
